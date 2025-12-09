@@ -1,4 +1,4 @@
-# SymfonyPlus Educational Project
+# Symfony Educational Project
 
 A comprehensive educational project for mastering the **latest Symfony PHP framework** through hands-on learning, modern best practices, and deep architectural understanding.
 
@@ -14,7 +14,7 @@ This repository contains educational materials covering the entire Symfony ecosy
 ## Directory Structure
 
 ```
-symfonyplus-educational-project/
+symfony-educational-project/
 ├── README.md
 ├── SYMFONY_FUNDAMENTALS.md       # Core principles and architecture
 ├── SETUP_GUIDE.md                # Environment setup instructions
