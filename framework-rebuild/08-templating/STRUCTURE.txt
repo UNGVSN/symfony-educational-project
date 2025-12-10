@@ -1,0 +1,236 @@
+Chapter 08: Templating - Directory Structure
+=============================================
+
+08-templating/
+│
+├── Documentation
+│   ├── README.md                          # Complete theoretical guide (20KB)
+│   ├── USAGE.md                           # Practical usage guide with examples
+│   ├── EXERCISES.md                       # Hands-on exercises with solutions
+│   ├── INDEX.md                           # Chapter overview and navigation
+│   └── STRUCTURE.txt                      # This file - directory structure
+│
+├── Configuration
+│   ├── composer.json                      # Dependencies (Twig, PHPUnit)
+│   ├── phpunit.xml                        # Test configuration
+│   └── .gitignore                         # Git ignore rules
+│
+├── Examples
+│   └── example.php                        # Runnable examples demonstrating all features
+│
+├── Source Code (src/)
+│   │
+│   ├── Templating/                        # Core templating components
+│   │   ├── EngineInterface.php           # Template engine contract
+│   │   ├── PhpEngine.php                 # Simple PHP template engine
+│   │   ├── TwigEngine.php                # Twig wrapper implementation
+│   │   │
+│   │   └── Helper/                        # Template helpers
+│   │       ├── HelperInterface.php       # Helper contract
+│   │       └── RouterHelper.php          # URL generation helper
+│   │
+│   ├── Bridge/                            # Framework bridges
+│   │   └── Twig/
+│   │       └── TwigExtension.php         # Custom Twig extension (path, url, asset)
+│   │
+│   ├── Http/                              # HTTP layer
+│   │   ├── AbstractController.php        # Base controller with render()
+│   │   ├── Response.php                  # HTTP response
+│   │   ├── JsonResponse.php              # JSON response
+│   │   ├── RedirectResponse.php          # Redirect response
+│   │   └── NotFoundHttpException.php     # 404 exception
+│   │
+│   └── Routing/                           # Supporting components
+│       └── RouterInterface.php           # Router contract (simplified)
+│
+├── Templates (templates/)
+│   ├── base.html.twig                    # Base layout template
+│   ├── example.php                       # Example PHP template
+│   │
+│   ├── home/
+│   │   └── index.html.twig              # Homepage template
+│   │
+│   └── blog/
+│       ├── index.html.twig              # Blog list template
+│       └── show.html.twig               # Blog post template
+│
+└── Tests (tests/)
+    │
+    ├── Templating/
+    │   ├── PhpEngineTest.php            # PHP engine tests (12 tests)
+    │   └── TwigEngineTest.php           # Twig engine tests (8 tests)
+    │
+    ├── Bridge/Twig/
+    │   └── TwigExtensionTest.php        # Extension tests (6 tests)
+    │
+    └── Http/
+        └── AbstractControllerTest.php    # Controller tests (6 tests)
+
+
+File Count Summary
+==================
+Total Files: 28
+
+Documentation:     5 files (.md + .txt)
+Configuration:     3 files (.json, .xml, .gitignore)
+Examples:          1 file  (example.php)
+Source Code:      10 files (PHP classes/interfaces)
+Templates:         4 files (.twig, .php)
+Tests:             4 files (Test classes)
+Other:             1 file  (vendor/ managed by composer)
+
+
+Key Components
+==============
+
+1. Template Engines (2 implementations)
+   - PhpEngine       - Simple PHP-based rendering
+   - TwigEngine      - Professional Twig integration
+
+2. Template Helpers (2 components)
+   - HelperInterface - Contract for helpers
+   - RouterHelper    - URL generation in templates
+
+3. Twig Bridge (1 extension)
+   - TwigExtension   - Integrates routing, assets into Twig
+
+4. HTTP Layer (5 components)
+   - AbstractController     - Base controller with render()
+   - Response              - Standard HTTP response
+   - JsonResponse          - JSON API responses
+   - RedirectResponse      - Redirects
+   - NotFoundHttpException - 404 errors
+
+5. Test Suite (32+ tests)
+   - PhpEngineTest         - 12 tests
+   - TwigEngineTest        - 8 tests
+   - TwigExtensionTest     - 6 tests
+   - AbstractControllerTest- 6 tests
+
+
+Line Count (Approximate)
+=========================
+README.md               : ~800 lines (theory and examples)
+USAGE.md               : ~600 lines (practical guide)
+EXERCISES.md           : ~400 lines (exercises + solutions)
+INDEX.md               : ~350 lines (overview)
+
+PhpEngine.php          : ~180 lines (implementation + docs)
+TwigEngine.php         : ~70 lines  (wrapper)
+TwigExtension.php      : ~130 lines (bridge)
+AbstractController.php : ~100 lines (controller base)
+
+Tests                  : ~500 lines (comprehensive coverage)
+Templates              : ~200 lines (examples)
+
+Total                  : ~3,500 lines
+
+
+Dependencies
+============
+Production:
+  - php: >=8.2
+  - twig/twig: ^3.8
+
+Development:
+  - phpunit/phpunit: ^10.5
+
+
+Quick Start Commands
+====================
+cd /home/ungvsn/symfony-educational-project/framework-rebuild/08-templating
+
+# Install dependencies
+composer install
+
+# Run examples
+php example.php
+
+# Run tests
+./vendor/bin/phpunit
+
+# Run specific test
+./vendor/bin/phpunit tests/Templating/PhpEngineTest.php
+
+# Run with coverage (requires xdebug)
+./vendor/bin/phpunit --coverage-html coverage/
+
+
+Learning Path
+=============
+1. Read README.md          (30-45 min) - Theory
+2. Read USAGE.md           (20-30 min) - Practice
+3. Study source code       (45-60 min) - Implementation
+4. Run example.php         (10-15 min) - See it work
+5. Read tests/             (30-45 min) - Edge cases
+6. Try EXERCISES.md        (2-4 hours) - Hands-on
+7. Build your own project  (varies)    - Apply knowledge
+
+Total estimated time: 6-10 hours
+
+
+Features Implemented
+====================
+✓ Template engine abstraction (EngineInterface)
+✓ PHP template engine with output buffering
+✓ Twig template engine wrapper
+✓ Template helpers system
+✓ Router integration (URL generation)
+✓ Asset management (asset URLs)
+✓ Custom Twig extensions
+✓ Template inheritance (Twig)
+✓ Auto-escaping security
+✓ Controller integration
+✓ Multiple response types (HTML, JSON, Redirect)
+✓ Error handling (404, exceptions)
+✓ Comprehensive test coverage
+✓ Working examples
+✓ Detailed documentation
+
+
+Symfony Comparison
+==================
+Similarities:
+- EngineInterface design
+- Twig as primary engine
+- Template helpers concept
+- Bridge pattern for Twig
+- Controller render() method
+- Auto-escaping by default
+
+Differences (Symfony has more):
+- Multiple template namespaces (@Bundle)
+- Form rendering integration
+- Translation integration
+- Security integration (is_granted)
+- Debug toolbar integration
+- Asset versioning/manifests
+- ESI and fragment rendering
+- Template events system
+
+
+Learning Outcomes
+=================
+After completing this chapter, you will understand:
+
+✓ Why separate views from logic (MVC)
+✓ How template engines work internally
+✓ Output buffering techniques
+✓ Variable extraction and scope
+✓ Security through auto-escaping
+✓ Template inheritance patterns
+✓ Bridge pattern implementation
+✓ How Symfony integrates Twig
+✓ Performance optimization strategies
+✓ Testing template rendering
+✓ Best practices for templating
+
+
+Next Chapter Preview
+====================
+Chapter 09: Forms
+- Form abstraction and rendering
+- Data binding and validation
+- CSRF protection
+- Form themes in Twig
+- Integration with this templating system

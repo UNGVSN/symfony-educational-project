@@ -1,0 +1,87 @@
+# Apache URL Rewriting Configuration
+#
+# This file configures Apache's mod_rewrite module to redirect all requests
+# to index.php while preserving the original URL for routing.
+#
+# How it works:
+# 1. User requests: http://example.com/products/123
+# 2. Apache checks if /products/123 is a real file (it's not)
+# 3. Apache checks if /products/123 is a real directory (it's not)
+# 4. Apache rewrites the request to /index.php
+# 5. In index.php, $_SERVER['REQUEST_URI'] is still '/products/123'
+# 6. Our Framework uses REQUEST_URI to route to the correct handler
+#
+# Result: Clean URLs without .php extensions!
+
+# Enable the rewrite engine
+RewriteEngine On
+
+# Condition 1: If the requested path is NOT a regular file
+# This allows real files (CSS, JS, images) to be served directly
+# Example: /css/style.css will be served as-is if it exists
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Condition 2: If the requested path is NOT a directory
+# This allows directory listings if enabled
+# Example: /images/ will work if it's a real directory
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Rule: Rewrite everything else to index.php
+# ^(.*)$ matches the entire URI
+# [QSA,L] are flags:
+#   QSA = Query String Append (preserves ?foo=bar in URL)
+#   L = Last rule (stop processing further rules)
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Examples of how this works:
+#
+# Request: /
+# Result: index.php (REQUEST_URI = '/')
+#
+# Request: /about
+# Result: index.php (REQUEST_URI = '/about')
+#
+# Request: /products/123
+# Result: index.php (REQUEST_URI = '/products/123')
+#
+# Request: /products?sort=name&order=asc
+# Result: index.php (REQUEST_URI = '/products?sort=name&order=asc')
+#          Query string preserved thanks to [QSA]
+#
+# Request: /css/style.css (file exists)
+# Result: Served directly (not rewritten)
+#
+# Request: /images/logo.png (file exists)
+# Result: Served directly (not rewritten)
+
+# Security: Deny access to sensitive files
+# Block access to files starting with a dot (hidden files)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Block access to specific sensitive files
+<FilesMatch "(composer\.json|composer\.lock|\.env)$">
+    Require all denied
+</FilesMatch>
+
+# Optional: Set default character encoding
+AddDefaultCharset UTF-8
+
+# Optional: Disable directory listings
+Options -Indexes
+
+# Optional: Enable compression for better performance
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Optional: Set cache headers for static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>

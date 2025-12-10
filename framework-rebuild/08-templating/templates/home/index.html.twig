@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Home - {{ parent() }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="hero">
+        <h1>Welcome to My Application</h1>
+        <p class="lead">Build amazing web applications with our framework</p>
+    </div>
+
+    <section class="features">
+        <h2>Features</h2>
+        <div class="feature-grid">
+            <div class="feature">
+                <h3>Fast Routing</h3>
+                <p>Lightning-fast URL routing with support for dynamic parameters</p>
+            </div>
+            <div class="feature">
+                <h3>Powerful Templating</h3>
+                <p>Clean syntax with Twig for secure and maintainable templates</p>
+            </div>
+            <div class="feature">
+                <h3>Dependency Injection</h3>
+                <p>Flexible service container for managing dependencies</p>
+            </div>
+        </div>
+    </section>
+
+    {% if featuredPosts is defined and featuredPosts|length > 0 %}
+    <section class="featured-posts">
+        <h2>Featured Posts</h2>
+        <div class="post-grid">
+            {% for post in featuredPosts %}
+                <article class="post-card">
+                    <h3>{{ post.title }}</h3>
+                    <p class="post-meta">
+                        Posted on {{ post.createdAt|date('F j, Y') }}
+                        {% if post.author is defined %}
+                            by {{ post.author.name }}
+                        {% endif %}
+                    </p>
+                    <p>{{ post.excerpt }}</p>
+                    <a href="{{ path('blog_show', {id: post.id}) }}" class="read-more">
+                        Read more &rarr;
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="cta">
+        <h2>Get Started</h2>
+        <p>Start building your application today</p>
+        <a href="{{ path('blog_list') }}" class="btn btn-primary">View Blog</a>
+    </section>
+{% endblock %}

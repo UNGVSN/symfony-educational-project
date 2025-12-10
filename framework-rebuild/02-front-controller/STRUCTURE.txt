@@ -1,0 +1,219 @@
+02-front-controller/
+│
+├── Documentation Files
+│   ├── INDEX.md                    # Start here - Navigation guide
+│   ├── README.md                   # Complete Front Controller guide (500+ lines)
+│   ├── QUICKSTART.md               # 5-minute quick start guide
+│   ├── ARCHITECTURE.md             # Visual diagrams and architecture
+│   ├── EXERCISES.md                # 10 exercises + 4 challenges
+│   └── STRUCTURE.txt               # This file - directory structure
+│
+├── Implementation Files
+│   ├── public/                     # Web-accessible directory (document root)
+│   │   ├── index.php              # Front Controller - entry point (6 lines!)
+│   │   └── .htaccess              # Apache URL rewriting configuration
+│   │
+│   ├── src/                        # Application code (not web-accessible)
+│   │   ├── Framework.php          # Routing and dispatch (handle method)
+│   │   ├── Request.php            # HTTP request abstraction
+│   │   └── Response.php           # HTTP response abstraction
+│   │
+│   └── composer.json               # Composer autoload configuration
+│
+├── Example Files (Evolution)
+│   └── examples/
+│       ├── 01-old-way-multiple-files.php          # The problem
+│       ├── 02-naive-front-controller.php          # First attempt
+│       ├── 03-front-controller-with-functions.php # Better separation
+│       └── 04-oop-framework.php                   # Modern way (our implementation)
+│
+├── Configuration Files
+│   └── nginx.conf                  # Nginx configuration example
+│
+├── Testing Files
+│   └── test.php                    # Test script (no web server needed)
+│
+├── Generated Files (after composer install)
+│   └── vendor/                     # Composer dependencies
+│       └── autoload.php           # PSR-4 autoloader
+│
+└── Optional Files (created by exercises)
+    ├── logs/                       # Log files (Exercise 6)
+    │   └── requests.log
+    └── templates/                  # Template files (Exercise 10)
+        ├── home.php
+        ├── about.php
+        └── ...
+
+
+QUICK REFERENCE
+===============
+
+Main Entry Point:
+-----------------
+public/index.php
+  ↓
+  Loads: vendor/autoload.php
+  Creates: Request::createFromGlobals()
+  Uses: Framework->handle($request)
+  Returns: Response->send()
+
+
+Request Flow:
+------------
+HTTP Request
+  ↓
+Web Server (Apache/Nginx)
+  ↓
+URL Rewriting (.htaccess / nginx.conf)
+  ↓
+public/index.php (Front Controller)
+  ↓
+src/Framework.php (Routing)
+  ↓
+Action Method
+  ↓
+src/Response.php
+  ↓
+HTTP Response
+
+
+File Sizes (approximate):
+------------------------
+README.md ............. 30 KB (comprehensive guide)
+ARCHITECTURE.md ....... 15 KB (visual diagrams)
+EXERCISES.md .......... 12 KB (hands-on practice)
+QUICKSTART.md ......... 8 KB (quick setup)
+INDEX.md .............. 10 KB (navigation)
+src/Framework.php ..... 12 KB (routing + actions)
+src/Request.php ....... 4 KB (HTTP request)
+src/Response.php ...... 6 KB (HTTP response)
+public/index.php ...... 2 KB (entry point + comments)
+public/.htaccess ...... 2 KB (Apache config + comments)
+nginx.conf ............ 4 KB (Nginx config + comments)
+test.php .............. 4 KB (test suite)
+
+
+Key Components:
+--------------
+[Request] ----passed to----> [Framework] ----returns----> [Response]
+    ↑                             ↓                            ↓
+    |                        [Routing]                    [send()]
+    |                             ↓                            ↓
+[Superglobals]            [Action Methods]              [HTTP Output]
+
+
+URLs Handled:
+------------
+GET  /                    → homeAction()
+GET  /about               → aboutAction()
+GET  /contact             → contactFormAction()
+POST /contact             → contactSubmitAction()
+GET  /products            → productListAction()
+GET  /products/{id}       → productDetailAction($id)
+GET  /api/products        → apiProductsAction()
+*    /*                   → notFoundAction() (404)
+
+
+Routing Patterns:
+----------------
+Static:    $uri === '/'
+Static:    $uri === '/about'
+Dynamic:   preg_match('#^/products/(\d+)$#', $uri, $matches)
+Query:     $request->getQuery('sort')
+Method:    $request->getMethod() === 'POST'
+
+
+Response Types:
+--------------
+HTML:      new Response($html)
+JSON:      Response::json(['data' => ...])
+Redirect:  Response::redirect('/new-url')
+Error:     new Response($html, 404)
+
+
+What to Read First:
+------------------
+1. INDEX.md ............ Overview and navigation
+2. QUICKSTART.md ....... Get it running (5 minutes)
+3. README.md ........... Learn the concepts (30 minutes)
+4. examples/01 ......... See the old way
+5. examples/04 ......... See the new way
+6. ARCHITECTURE.md ..... Visual understanding
+7. EXERCISES.md ........ Practice (2-4 hours)
+
+
+Commands:
+---------
+# Install
+composer install
+
+# Test without server
+php test.php
+
+# Run development server
+cd public && php -S localhost:8000
+
+# Test with curl
+curl http://localhost:8000
+curl http://localhost:8000/api/products
+
+# Check logs (after Exercise 6)
+tail -f logs/requests.log
+
+
+Important Paths:
+---------------
+Document Root:  /home/ungvsn/symfony-educational-project/framework-rebuild/02-front-controller/public
+Entry Point:    /home/ungvsn/symfony-educational-project/framework-rebuild/02-front-controller/public/index.php
+Source Code:    /home/ungvsn/symfony-educational-project/framework-rebuild/02-front-controller/src
+Docs:           /home/ungvsn/symfony-educational-project/framework-rebuild/02-front-controller/*.md
+
+
+Security Note:
+-------------
+✓ Only 'public/' directory should be web-accessible
+✓ 'src/', 'vendor/', config files NOT accessible via HTTP
+✓ .htaccess blocks hidden files
+✓ All user input is escaped in templates
+
+
+Performance:
+-----------
+Overhead: ~1-2ms (minimal with OPcache)
+Routes:   O(n) linear scan (OK for small apps)
+Future:   Route caching in Chapter 03
+
+
+Concepts Learned:
+----------------
+✓ Front Controller Pattern
+✓ Single Responsibility Principle
+✓ Request/Response Abstraction
+✓ URL Rewriting
+✓ Routing Basics
+✓ HTTP Method Handling
+✓ Route Parameters
+✓ Separation of Concerns
+✓ PSR-4 Autoloading
+
+
+Next Steps:
+----------
+Chapter 03: Router
+  - Dedicated Router class
+  - Route registration DSL
+  - Named routes
+  - Route groups
+  - Route constraints
+  - Route caching
+
+
+Git Tip:
+-------
+Don't commit vendor/ directory:
+
+.gitignore:
+vendor/
+logs/
+*.log

@@ -1,0 +1,32 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Console Application
+ *
+ * Command-line interface for the framework.
+ *
+ * Usage:
+ *   php bin/console
+ *   php bin/console list
+ *   php bin/console help [command]
+ */
+
+use App\Kernel;
+
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+// Create kernel
+$kernel = new Kernel('dev', true);
+$kernel->boot();
+
+// In a full implementation, you would create a Symfony Console Application here
+// For now, just show a simple message
+echo "Framework Console\n";
+echo "=================\n\n";
+echo "Available commands:\n";
+echo "  list         List available commands\n";
+echo "  debug:router Show all registered routes\n";
+echo "  debug:container Show all registered services\n\n";
+echo "This is a simplified console. In a real application,\n";
+echo "you would use Symfony's Console component.\n";

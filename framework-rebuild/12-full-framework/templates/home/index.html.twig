@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }} - My Framework App{% endblock %}
+
+{% block body %}
+<div style="text-align: center; padding: 3rem 0;">
+    <h1 style="font-size: 3rem; margin-bottom: 1.5rem; color: #2c3e50;">{{ title }}</h1>
+    <p style="font-size: 1.25rem; color: #7f8c8d; margin-bottom: 2rem;">{{ message }}</p>
+    
+    <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+        <h2 style="font-size: 1.75rem; margin-bottom: 1rem;">What is this?</h2>
+        <p>This is a complete web framework built from scratch, inspired by Symfony's architecture. It demonstrates:</p>
+        
+        <ul style="margin: 1rem 0 2rem 2rem; line-height: 2;">
+            <li><strong>HTTP Foundation</strong> - Request/Response abstraction</li>
+            <li><strong>Routing</strong> - URL matching and parameter extraction</li>
+            <li><strong>HTTP Kernel</strong> - Request handling workflow</li>
+            <li><strong>Dependency Injection</strong> - Service container and autowiring</li>
+            <li><strong>Event System</strong> - Observer pattern for extensibility</li>
+            <li><strong>Controller Resolution</strong> - Automatic controller instantiation</li>
+            <li><strong>Argument Resolution</strong> - Auto-inject dependencies and parameters</li>
+            <li><strong>Templating</strong> - Twig integration</li>
+        </ul>
+
+        <h2 style="font-size: 1.75rem; margin-bottom: 1rem;">Try it out!</h2>
+        <p style="margin-bottom: 1rem;">
+            Visit the <a href="/blog" style="color: #3498db; text-decoration: none; font-weight: 600;">Blog</a> 
+            to see the framework in action.
+        </p>
+
+        <div style="background: #ecf0f1; padding: 1.5rem; border-radius: 6px; margin-top: 2rem;">
+            <h3 style="margin-bottom: 0.5rem;">Quick Start</h3>
+            <pre style="background: #2c3e50; color: #ecf0f1; padding: 1rem; border-radius: 4px; overflow-x: auto;"><code>// Start the development server
+php -S localhost:8000 -t public/
+
+// Visit in browser
+http://localhost:8000
+http://localhost:8000/blog
+http://localhost:8000/blog/1</code></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

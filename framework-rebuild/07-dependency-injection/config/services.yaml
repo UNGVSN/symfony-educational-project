@@ -1,0 +1,78 @@
+# Service configuration example in YAML format
+# This is a reference showing what the equivalent YAML config would look like
+
+parameters:
+    app.name: 'My Application'
+    app.version: '1.0.0'
+    database.host: 'localhost'
+    database.port: 3306
+    database.name: 'myapp'
+
+services:
+    # Default service configuration
+    _defaults:
+        autowire: true      # Automatically inject dependencies
+        autoconfigure: true # Automatically tag services
+        public: false       # Services are private by default
+
+    # Simple service
+    logger:
+        class: Psr\Log\NullLogger
+        public: true
+
+    # Service with arguments
+    database.connection:
+        class: PDO
+        arguments:
+            - 'mysql:host=%database.host%;port=%database.port%;dbname=%database.name%'
+            - 'username'
+            - 'password'
+            - { 16: 2 } # PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+
+    # Repository with dependency injection
+    user.repository:
+        class: App\Repository\UserRepository
+        arguments:
+            - '@database.connection'
+        tags:
+            - { name: 'repository' }
+
+    # Service with setter injection
+    user.service:
+        class: App\Service\UserService
+        arguments:
+            - '@user.repository'
+        calls:
+            - setLogger: ['@logger']
+
+    # Autowired controller
+    user.controller:
+        class: App\Controller\UserController
+        autowire: true
+        public: true
+
+    # Factory service
+    mailer.factory:
+        class: App\Factory\MailerFactory
+        arguments:
+            - '%app.name%'
+
+    mailer:
+        class: App\Service\Mailer
+        factory: ['@mailer.factory', 'create']
+
+    # Event listener with tags
+    user.event_listener:
+        class: App\EventListener\UserEventListener
+        arguments:
+            - '@logger'
+        tags:
+            - { name: 'kernel.event_listener', event: 'user.created', method: 'onUserCreated', priority: 10 }
+
+    # Private service
+    cache.adapter:
+        class: App\Cache\FileCache
+        public: false
+
+    # Alias
+    App\Repository\UserRepositoryInterface: '@user.repository'

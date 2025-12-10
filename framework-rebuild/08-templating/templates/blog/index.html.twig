@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Blog - {{ parent() }}{% endblock %}
+
+{% block content %}
+    <div class="blog-header">
+        <h1>Blog</h1>
+        <p>Latest articles and tutorials</p>
+    </div>
+
+    {% if posts is defined and posts|length > 0 %}
+        <div class="blog-list">
+            {% for post in posts %}
+                <article class="blog-item">
+                    <h2>
+                        <a href="{{ path('blog_show', {id: post.id}) }}">
+                            {{ post.title }}
+                        </a>
+                    </h2>
+
+                    <div class="post-meta">
+                        <time datetime="{{ post.createdAt|date('Y-m-d') }}">
+                            {{ post.createdAt|date('F j, Y') }}
+                        </time>
+
+                        {% if post.author is defined %}
+                            <span class="author">by {{ post.author.name }}</span>
+                        {% endif %}
+                    </div>
+
+                    <p>{{ post.excerpt }}</p>
+
+                    <a href="{{ path('blog_show', {id: post.id}) }}" class="read-more">
+                        Read more &rarr;
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+
+        {% if pagination is defined %}
+        <nav class="pagination">
+            {% if pagination.hasPrevious %}
+                <a href="{{ path('blog_list', {page: pagination.previousPage}) }}" class="prev">
+                    &larr; Previous
+                </a>
+            {% endif %}
+
+            <span class="page-info">
+                Page {{ pagination.currentPage }} of {{ pagination.totalPages }}
+            </span>
+
+            {% if pagination.hasNext %}
+                <a href="{{ path('blog_list', {page: pagination.nextPage}) }}" class="next">
+                    Next &rarr;
+                </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    {% else %}
+        <p class="no-posts">No blog posts found.</p>
+    {% endif %}
+{% endblock %}

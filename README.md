@@ -9,6 +9,7 @@ This repository contains educational materials covering the entire Symfony ecosy
 - **Core Topics** - 15 comprehensive study guides covering all essential Symfony concepts
 - **Fast Track Exercises** - 32 hands-on projects following Symfony's official "The Fast Track" book
 - **Component Deep Dives** - Detailed analysis of core Symfony components
+- **Framework Rebuild** - Step-by-step recreation of Symfony from scratch (12 chapters, 300+ files)
 - **Code Examples** - Production-ready patterns and best practices
 
 ## Directory Structure
@@ -87,6 +88,20 @@ symfony-educational-project/
 │   ├── cache/                    # Caching abstraction
 │   └── serializer/               # Data serialization
 │
+├── framework-rebuild/            # Build Your Own Symfony (12 chapters)
+│   ├── 01-http-foundation/       # Request/Response objects
+│   ├── 02-front-controller/      # Single entry point
+│   ├── 03-routing/               # URL matching and generation
+│   ├── 04-controllers/           # Controller resolution
+│   ├── 05-http-kernel/           # The heart of Symfony
+│   ├── 06-event-dispatcher/      # Event system
+│   ├── 07-dependency-injection/  # Service container
+│   ├── 08-templating/            # View layer with Twig
+│   ├── 09-forms/                 # Form handling
+│   ├── 10-security/              # Authentication/Authorization
+│   ├── 11-console/               # CLI applications
+│   └── 12-full-framework/        # Putting it all together
+│
 ├── code-examples/                # Production-ready examples
 │   ├── controllers/              # Controller patterns
 │   ├── services/                 # Service architecture
@@ -150,6 +165,14 @@ Fast Track exercises guide you through building a complete application:
 - Database, forms, security, API, and more
 - Production deployment considerations
 
+### 5. Rebuild the Framework
+The `framework-rebuild/` section teaches you how Symfony works internally by building it from scratch:
+- **12 progressive chapters** covering all core components
+- **300+ PHP files** with complete implementations
+- **Full test suites** for each component
+- **Detailed documentation** explaining how each part works
+- Learn by doing: build Request/Response, Router, HttpKernel, DI Container, and more
+
 ## Topics Covered
 
 This project covers all essential Symfony topics using the **latest stable version**:
@@ -191,7 +214,8 @@ This project covers all essential Symfony topics using the **latest stable versi
 2. Follow the [Setup Guide](./SETUP_GUIDE.md)
 3. Choose your learning path:
    - **Beginners**: Start with `fast-track/01-environment`
-   - **Certification**: Start with `topics/php-fundamentals`
+   - **Certification**: Start with `topics/php/`
+   - **Framework Internals**: Start with `framework-rebuild/01-http-foundation`
    - **Specific Topics**: Navigate to any topic directory
 4. Complete exercises and commit your progress
 5. Test your knowledge with the questions

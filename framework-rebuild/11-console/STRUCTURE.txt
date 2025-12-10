@@ -1,0 +1,353 @@
+Chapter 11: Console - CLI Application
+=====================================
+
+Complete File Structure
+-----------------------
+
+11-console/
+│
+├── Documentation (7 files)
+│   ├── README.md                  [Main documentation - 500+ lines]
+│   ├── QUICK_START.md            [5-minute tutorial]
+│   ├── EXAMPLES.md               [Practical examples - 400+ lines]
+│   ├── HOW_IT_WORKS.md           [Architecture deep dive - 700+ lines]
+│   ├── INDEX.md                  [Navigation guide]
+│   ├── SUMMARY.md                [Chapter summary]
+│   └── STRUCTURE.txt             [This file]
+│
+├── Configuration (4 files)
+│   ├── composer.json             [Dependencies & autoloading]
+│   ├── phpunit.xml               [Test configuration]
+│   ├── .gitignore                [Git ignore rules]
+│   └── bin/
+│       └── console               [Executable entry point]
+│
+├── Source Code - Core Framework (12 files)
+│   └── src/
+│       └── Console/
+│           ├── Application.php           [~200 lines - Main app class]
+│           │
+│           ├── Command/
+│           │   ├── Command.php           [~300 lines - Base command]
+│           │   └── AsCommand.php         [~20 lines - PHP 8 attribute]
+│           │
+│           ├── Input/
+│           │   ├── InputInterface.php    [~50 lines - Input abstraction]
+│           │   ├── ArgvInput.php         [~250 lines - CLI parser]
+│           │   ├── InputArgument.php     [~80 lines - Argument def]
+│           │   └── InputOption.php       [~100 lines - Option def]
+│           │
+│           ├── Output/
+│           │   ├── OutputInterface.php   [~60 lines - Output abstraction]
+│           │   └── ConsoleOutput.php     [~200 lines - Formatted output]
+│           │
+│           ├── Style/
+│           │   └── SymfonyStyle.php      [~300 lines - High-level API]
+│           │
+│           └── Helper/
+│               ├── ProgressBar.php       [~200 lines - Progress bar]
+│               └── Table.php             [~250 lines - Table renderer]
+│
+├── Source Code - Example Commands (3 files)
+│   └── src/
+│       └── Command/
+│           ├── GreetCommand.php          [~100 lines - Basic demo]
+│           ├── ListUsersCommand.php      [~150 lines - Advanced demo]
+│           └── InteractiveCommand.php    [~100 lines - Interactive demo]
+│
+├── Tests (6 files)
+│   └── tests/
+│       ├── Command/
+│       │   └── GreetCommandTest.php      [Integration test]
+│       │
+│       └── Console/
+│           ├── ApplicationTest.php       [Application tests]
+│           │
+│           ├── Input/
+│           │   ├── ArrayInput.php        [Test utility]
+│           │   ├── InputArgumentTest.php [Unit test]
+│           │   └── InputOptionTest.php   [Unit test]
+│           │
+│           └── Output/
+│               └── BufferedOutput.php    [Test utility]
+│
+└── Vendor (1 file)
+    └── vendor/
+        └── autoload.php                  [PSR-4 autoloader]
+
+Summary
+-------
+Total Files: 31
+Total Lines: ~5,250+
+
+Breakdown:
+- Core Framework:    12 files (~2,000 lines)
+- Example Commands:   3 files (~350 lines)
+- Tests:             6 files (~400 lines)
+- Documentation:     7 files (~2,500 lines)
+- Configuration:     4 files
+
+File Categories
+---------------
+
+[MUST READ - Start Here]
+→ QUICK_START.md        - 5 minutes to get started
+→ README.md             - Comprehensive guide
+→ EXAMPLES.md           - Practical code examples
+
+[CORE FRAMEWORK - Study These]
+→ Application.php       - Command registry & execution
+→ Command.php           - Base command class
+→ ArgvInput.php         - Argument parsing
+→ ConsoleOutput.php     - Output formatting
+→ SymfonyStyle.php      - High-level API
+
+[EXAMPLE COMMANDS - Learn By Example]
+→ GreetCommand.php      - Simple command
+→ ListUsersCommand.php  - Advanced features
+→ InteractiveCommand.php - User interaction
+
+[HELPERS - Utilities]
+→ ProgressBar.php       - Progress indication
+→ Table.php             - Tabular data
+
+[TESTS - Testing Patterns]
+→ GreetCommandTest.php  - How to test commands
+→ ArrayInput.php        - Test input utility
+→ BufferedOutput.php    - Test output utility
+
+[ADVANCED - Deep Dive]
+→ HOW_IT_WORKS.md       - Architecture explained
+→ INDEX.md              - Complete navigation
+
+[REFERENCE]
+→ SUMMARY.md            - Chapter summary
+→ STRUCTURE.txt         - This file
+
+Key Concepts by File
+--------------------
+
+Application.php:
+  - Command registry
+  - Command discovery
+  - Execution lifecycle
+  - Error handling
+
+Command.php:
+  - Template method pattern
+  - Lifecycle hooks
+  - Configuration API
+  - Help generation
+
+ArgvInput.php:
+  - Argument parsing algorithm
+  - Option parsing (short/long)
+  - Input validation
+  - Default values
+
+ConsoleOutput.php:
+  - ANSI color codes
+  - Output formatting
+  - Verbosity levels
+  - Stream handling
+
+SymfonyStyle.php:
+  - Beautiful output API
+  - Consistent styling
+  - Progress bars
+  - Tables
+  - Interactive questions
+
+ProgressBar.php:
+  - Visual feedback
+  - Time estimation
+  - Memory display
+  - Custom formatting
+
+Table.php:
+  - Column auto-sizing
+  - Multiple styles
+  - Border rendering
+  - Row formatting
+
+Learning Path
+-------------
+
+Beginner (1-2 hours):
+  1. QUICK_START.md
+  2. Run example commands
+  3. Create first command
+  4. GreetCommand.php
+
+Intermediate (3-4 hours):
+  5. README.md
+  6. EXAMPLES.md
+  7. Study all example commands
+  8. Create complex commands
+
+Advanced (4-6 hours):
+  9. HOW_IT_WORKS.md
+  10. Study core framework files
+  11. Understand architecture
+  12. Write comprehensive tests
+
+Expert (6+ hours):
+  13. Extend framework
+  14. Add custom features
+  15. Compare with Symfony
+  16. Build production app
+
+Usage Examples
+--------------
+
+Basic Usage:
+  $ php bin/console list
+  $ php bin/console app:greet World
+  $ php bin/console app:greet John --uppercase
+  $ php bin/console help app:greet
+
+Advanced Usage:
+  $ php bin/console app:list-users
+  $ php bin/console app:list-users --format=json
+  $ php bin/console app:list-users --limit=5
+  $ php bin/console app:interactive
+
+Testing:
+  $ composer install
+  $ ./vendor/bin/phpunit
+  $ ./vendor/bin/phpunit tests/Command/GreetCommandTest.php
+
+Development:
+  1. Create command in src/Command/
+  2. Register in bin/console
+  3. Test with ArrayInput/BufferedOutput
+  4. Run with: php bin/console command:name
+
+Features Implemented
+--------------------
+
+Input Processing:
+  ✓ Required arguments
+  ✓ Optional arguments
+  ✓ Array arguments
+  ✓ Flag options
+  ✓ Value options
+  ✓ Short options (-v)
+  ✓ Long options (--verbose)
+  ✓ Option values (--env=prod)
+  ✓ Default values
+  ✓ Input validation
+
+Output Processing:
+  ✓ Formatted text
+  ✓ ANSI colors
+  ✓ Multiple styles
+  ✓ Verbosity levels
+  ✓ Custom formatting
+  ✓ Stream output
+
+Command System:
+  ✓ Command registration
+  ✓ Command discovery
+  ✓ Help generation
+  ✓ Lifecycle hooks
+  ✓ Exit codes
+  ✓ Aliases
+  ✓ Hidden commands
+  ✓ Attributes (#[AsCommand])
+
+Helpers:
+  ✓ Progress bars
+  ✓ Tables
+  ✓ SymfonyStyle API
+  ✓ Questions
+  ✓ Confirmations
+  ✓ Choices
+
+Testing:
+  ✓ Unit tests
+  ✓ Integration tests
+  ✓ Test utilities
+  ✓ PHPUnit integration
+
+Quick Reference Commands
+------------------------
+
+Installation:
+  cd 11-console
+  composer install
+  chmod +x bin/console
+
+List Commands:
+  php bin/console list
+
+Get Help:
+  php bin/console help <command>
+
+Run Command:
+  php bin/console <command> [args] [options]
+
+Run Tests:
+  ./vendor/bin/phpunit
+
+Create Command:
+  1. Create src/Command/MyCommand.php
+  2. Add #[AsCommand] attribute
+  3. Implement execute()
+  4. Register in bin/console
+
+Technologies Used
+-----------------
+
+- PHP 8.2+
+- PSR-4 Autoloading
+- PSR-12 Coding Standards
+- PHPUnit 10+
+- Composer
+- ANSI Escape Codes
+- Object-Oriented Programming
+- Design Patterns:
+  * Command Pattern
+  * Template Method Pattern
+  * Strategy Pattern
+  * Decorator Pattern
+  * Factory Pattern
+
+Next Steps
+----------
+
+After mastering this chapter:
+
+1. Build a complete CLI application
+2. Study real Symfony Console
+3. Learn about:
+   - Process management
+   - Signal handling
+   - Event systems
+   - Auto-completion
+4. Create open-source CLI tools
+5. Contribute to the framework
+
+Resources
+---------
+
+Documentation:
+  - README.md (comprehensive)
+  - QUICK_START.md (beginner)
+  - EXAMPLES.md (practical)
+  - HOW_IT_WORKS.md (advanced)
+
+Source Code:
+  - src/Console/ (framework)
+  - src/Command/ (examples)
+
+Tests:
+  - tests/ (all tests)
+
+External:
+  - Symfony Console Docs
+  - PHP CLI Documentation
+  - ANSI Escape Codes Guide
+
+---
+End of Structure Documentation

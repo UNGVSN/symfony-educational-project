@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ post.title }} - Blog{% endblock %}
+
+{% block body %}
+<article>
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">{{ post.title }}</h1>
+    
+    <div class="meta" style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #3498db;">
+        <span><strong>By:</strong> {{ post.author }}</span> | 
+        <span><strong>Published:</strong> {{ post.createdAt|date('F j, Y') }}</span>
+    </div>
+
+    <div style="font-size: 1.1rem; line-height: 1.8; color: #444;">
+        {{ post.content|nl2br }}
+    </div>
+
+    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #ecf0f1;">
+        <a href="/blog" style="color: #3498db; text-decoration: none; font-weight: 600;">
+            ← Back to all posts
+        </a>
+    </div>
+</article>
+{% endblock %}

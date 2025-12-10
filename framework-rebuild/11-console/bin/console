@@ -1,0 +1,34 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Console Application Entry Point
+ *
+ * This is the main entry point for running CLI commands.
+ *
+ * Usage:
+ *   php bin/console list
+ *   php bin/console app:greet World
+ *   php bin/console app:list-users
+ */
+
+// Autoloader
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Console\Application;
+use Command\GreetCommand;
+use Command\ListUsersCommand;
+use Command\InteractiveCommand;
+
+// Create application
+$application = new Application('Educational Console App', '1.0.0');
+
+// Register commands
+$application->add(new GreetCommand());
+$application->add(new ListUsersCommand());
+$application->add(new InteractiveCommand());
+
+// Run application
+exit($application->run());

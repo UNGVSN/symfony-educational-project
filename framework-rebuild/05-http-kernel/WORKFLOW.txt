@@ -1,0 +1,574 @@
+HTTP KERNEL WORKFLOW - Visual Guide
+=====================================
+
+This file shows the complete request/response workflow with ASCII art.
+
+
+OVERVIEW: The 30,000 Foot View
+================================
+
+    Browser                    HTTP Request                    Kernel                       Controller                  Browser
+       |                            |                            |                               |                          |
+       |─────── GET /products/5 ────>────────────────────────────>                               |                          |
+       |                            |                            |                               |                          |
+       |                            |                    [Process Request]                       |                          |
+       |                            |                            |                               |                          |
+       |                            |                            |─────── Call controller ──────>                          |
+       |                            |                            |                               |                          |
+       |                            |                            |<────── Return Response ───────|                          |
+       |                            |                            |                               |                          |
+       |<─── HTTP/1.1 200 OK ───────<────────────────────────────<                               |                          |
+       |     <html>Product 5</html> |                            |                               |                          |
+
+
+DETAILED WORKFLOW: Step by Step
+=================================
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 0: BOOTSTRAP                                                                              │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                 │
+│  public/index.php (Front Controller)                                                           │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐   │
+│  │ 1. require autoload.php                           [Load all classes]                    │   │
+│  │ 2. $kernel = new AppKernel('prod', false)         [Create kernel]                       │   │
+│  │ 3. $request = Request::createFromGlobals()        [Wrap PHP superglobals]              │   │
+│  │ 4. $response = $kernel->handle($request)          [THE MAGIC HAPPENS HERE]             │   │
+│  │ 5. $response->send()                              [Send HTTP headers + body]            │   │
+│  │ 6. $kernel->terminate($request, $response)        [Post-response processing]            │   │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                            ↓
+                                            ↓
+                                            ↓
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 1: KERNEL BOOT (First request only)                                                      │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                 │
+│  Kernel::boot()                                                                                │
+│  ├─→ Create EventDispatcher                                                                    │
+│  ├─→ Create ControllerResolver                                                                 │
+│  ├─→ Create ArgumentResolver                                                                   │
+│  ├─→ Register bundles (foreach registerBundles())                                              │
+│  ├─→ Register event listeners (registerListeners())                                            │
+│  └─→ Create HttpKernel                                                                         │
+│                                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                            ↓
+                                            ↓
+                                            ↓
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 2: REQUEST HANDLING - The Main Event!                                                    │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                 │
+│  HttpKernel::handle($request, MAIN_REQUEST)                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 1: kernel.request EVENT                                             Time: ~1ms      │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  $event = new RequestEvent($kernel, $request, MAIN_REQUEST)                             │ │
+│  │  $dispatcher->dispatch($event, KernelEvents::REQUEST)                                   │ │
+│  │                                                                                          │ │
+│  │  Listeners (executed by priority, high to low):                                         │ │
+│  │                                                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ RouterListener (priority: 100)                                  │                     │ │
+│  │  │ ┌────────────────────────────────────────────────────────────┐ │                     │ │
+│  │  │ │ 1. Get request path: /products/5                           │ │                     │ │
+│  │  │ │ 2. Match against routes:                                   │ │                     │ │
+│  │  │ │    - /products/{id} → MATCH!                               │ │                     │ │
+│  │  │ │ 3. Set request attributes:                                 │ │                     │ │
+│  │  │ │    - _controller: ProductController::show                  │ │                     │ │
+│  │  │ │    - _route: product_show                                  │ │                     │ │
+│  │  │ │    - id: 5                                                 │ │                     │ │
+│  │  │ └────────────────────────────────────────────────────────────┘ │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ LocaleListener (priority: 50)                                   │                     │ │
+│  │  │ - Detect language from request                                  │                     │ │
+│  │  │ - Set $request->setLocale('en')                                 │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ AuthenticationListener (priority: 10)                           │                     │ │
+│  │  │ - Check session/token                                           │                     │ │
+│  │  │ - Load user                                                     │                     │ │
+│  │  │ - Or: $event->setResponse(new Response('Unauthorized', 401))   │                     │ │
+│  │  │   (This would SHORT-CIRCUIT the entire request!)                │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  Check: Did any listener set a response?                                                │ │
+│  │  if ($event->hasResponse()) {                                                           │ │
+│  │      // Short-circuit! Skip to PHASE 7 (kernel.response)                                │ │
+│  │      return $this->filterResponse($event->getResponse(), ...)                           │ │
+│  │  }                                                                                       │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+│                                            ↓                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 2: RESOLVE CONTROLLER                                           Time: <1ms         │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  $controller = $controllerResolver->getController($request)                             │ │
+│  │                                                                                          │ │
+│  │  ControllerResolver:                                                                     │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ 1. Get _controller attribute: "ProductController::show"        │                     │ │
+│  │  │ 2. Parse string: class=ProductController, method=show          │                     │ │
+│  │  │ 3. Instantiate: $instance = new ProductController()            │                     │ │
+│  │  │ 4. Return callable: [$instance, 'show']                        │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  if ($controller === false) {                                                           │ │
+│  │      throw new RuntimeException('Unable to find controller')                            │ │
+│  │  }                                                                                       │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+│                                            ↓                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 3: kernel.controller EVENT                                      Time: <1ms         │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  $event = new ControllerEvent($kernel, $request, MAIN_REQUEST, $controller)             │ │
+│  │  $dispatcher->dispatch($event, KernelEvents::CONTROLLER)                                │ │
+│  │                                                                                          │ │
+│  │  Listeners can:                                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ ControllerLoggerListener                                        │                     │ │
+│  │  │ - Log which controller will execute                             │                     │ │
+│  │  │ - $logger->info('Executing: ProductController::show')           │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ ControllerWrapperListener                                       │                     │ │
+│  │  │ - Wrap controller for AOP/profiling                             │                     │ │
+│  │  │ - $event->setController($wrappedController)                     │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  $controller = $event->getController() // May have been replaced                        │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+│                                            ↓                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 4: RESOLVE ARGUMENTS                                            Time: <1ms         │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  $arguments = $argumentResolver->getArguments($request, $controller)                    │ │
+│  │                                                                                          │ │
+│  │  ArgumentResolver analyzes:                                                              │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ Controller signature:                                           │                     │ │
+│  │  │   public function show(Request $request, int $id)               │                     │ │
+│  │  │                                                                 │                     │ │
+│  │  │ Resolve each parameter:                                         │                     │ │
+│  │  │                                                                 │                     │ │
+│  │  │ Parameter 1: $request (Request type-hint)                       │                     │ │
+│  │  │   → Strategy: Type-hinted Request                               │                     │ │
+│  │  │   → Value: Inject the Request object                            │                     │ │
+│  │  │                                                                 │                     │ │
+│  │  │ Parameter 2: $id (int)                                          │                     │ │
+│  │  │   → Strategy: Check request attributes                          │                     │ │
+│  │  │   → Value: $request->attributes->get('id') = 5                  │                     │ │
+│  │  │                                                                 │                     │ │
+│  │  │ Result: [$request, 5]                                           │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+│                                            ↓                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 5: kernel.controller_arguments EVENT                            Time: <1ms         │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  $event = new ControllerArgumentsEvent(...)                                             │ │
+│  │  $dispatcher->dispatch($event, KernelEvents::CONTROLLER_ARGUMENTS)                      │ │
+│  │                                                                                          │ │
+│  │  Listeners can modify arguments:                                                         │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ ArgumentValidatorListener                                       │                     │ │
+│  │  │ - Validate argument values                                      │                     │ │
+│  │  │ - if ($id < 1) throw new Exception('Invalid ID')                │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  $arguments = $event->getArguments()                                                     │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+│                                            ↓                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 6: EXECUTE CONTROLLER                                           Time: VARIES!      │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  $response = $controller(...$arguments)                                                 │ │
+│  │                                                                                          │ │
+│  │  Equivalent to:                                                                          │ │
+│  │  $response = $productController->show($request, 5)                                      │ │
+│  │                                                                                          │ │
+│  │  Inside controller (YOUR CODE):                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ public function show(Request $request, int $id): Response       │                     │ │
+│  │  │ {                                                               │                     │ │
+│  │  │     // 1. Get product from database                             │                     │ │
+│  │  │     $product = $this->repository->find($id);                    │                     │ │
+│  │  │                                                                 │                     │ │
+│  │  │     // 2. Check if found                                        │                     │ │
+│  │  │     if (!$product) {                                            │                     │ │
+│  │  │         throw new NotFoundHttpException();                      │                     │ │
+│  │  │     }                                                           │                     │ │
+│  │  │                                                                 │                     │ │
+│  │  │     // 3. Render template                                       │                     │ │
+│  │  │     $html = $this->renderTemplate('product.html', [             │                     │ │
+│  │  │         'product' => $product                                   │                     │ │
+│  │  │     ]);                                                         │                     │ │
+│  │  │                                                                 │                     │ │
+│  │  │     // 4. Return Response                                       │                     │ │
+│  │  │     return new Response($html);                                 │                     │ │
+│  │  │ }                                                               │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  Note: This is where most time is spent!                                                │ │
+│  │  - Database queries                                                                      │ │
+│  │  - Business logic                                                                        │ │
+│  │  - Template rendering                                                                    │ │
+│  │  - External API calls                                                                    │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+│                                            ↓                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 7: kernel.view EVENT (Only if controller didn't return Response)   Time: <1ms      │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  if (!$response instanceof Response) {                                                  │ │
+│  │      $event = new ViewEvent($kernel, $request, MAIN_REQUEST, $response)                 │ │
+│  │      $dispatcher->dispatch($event, KernelEvents::VIEW)                                  │ │
+│  │                                                                                          │ │
+│  │      Example: Controller returned an array                                               │ │
+│  │      ┌────────────────────────────────────────────────────────────────┐                 │ │
+│  │      │ Controller: return ['name' => 'Product', 'price' => 29.99];    │                 │ │
+│  │      │                                                                │                 │ │
+│  │      │ JsonListener:                                                  │                 │ │
+│  │      │   if (is_array($event->getControllerResult())) {               │                 │ │
+│  │      │       $response = new JsonResponse($result);                   │                 │ │
+│  │      │       $event->setResponse($response);                          │                 │ │
+│  │      │   }                                                            │                 │ │
+│  │      └────────────────────────────────────────────────────────────────┘                 │ │
+│  │                                                                                          │ │
+│  │      $response = $event->getResponse();                                                 │ │
+│  │                                                                                          │ │
+│  │      if (!$event->hasResponse()) {                                                      │ │
+│  │          throw new RuntimeException('Controller must return Response')                  │ │
+│  │      }                                                                                   │ │
+│  │  }                                                                                       │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+│                                            ↓                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 8: kernel.response EVENT                                        Time: <1ms         │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  $event = new ResponseEvent($kernel, $request, MAIN_REQUEST, $response)                 │ │
+│  │  $dispatcher->dispatch($event, KernelEvents::RESPONSE)                                  │ │
+│  │                                                                                          │ │
+│  │  Last chance to modify response!                                                         │ │
+│  │                                                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ SecurityHeadersListener                                         │                     │ │
+│  │  │ - $response->headers->set('X-Frame-Options', 'DENY')            │                     │ │
+│  │  │ - $response->headers->set('X-Content-Type-Options', 'nosniff')  │                     │ │
+│  │  │ - $response->headers->set('Content-Security-Policy', '...')     │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ CompressionListener                                             │                     │ │
+│  │  │ - if (client supports gzip)                                     │                     │ │
+│  │  │     - Compress response content                                 │                     │ │
+│  │  │     - Set Content-Encoding: gzip                                │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ ProfilerListener                                                │                     │ │
+│  │  │ - Add web debug toolbar (in dev mode)                           │                     │ │
+│  │  │ - Inject profiler HTML into response                            │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  │  $response = $event->getResponse()                                                       │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+│                                            ↓                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 9: kernel.finish_request EVENT                                  Time: <1ms         │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  $event = new FinishRequestEvent($kernel, $request, MAIN_REQUEST)                       │ │
+│  │  $dispatcher->dispatch($event, KernelEvents::FINISH_REQUEST)                            │ │
+│  │                                                                                          │ │
+│  │  ┌────────────────────────────────────────────────────────────────┐                     │ │
+│  │  │ RequestStackListener                                            │                     │ │
+│  │  │ - Pop request from stack                                        │                     │ │
+│  │  │ - Clean up request-scoped services                              │                     │ │
+│  │  └────────────────────────────────────────────────────────────────┘                     │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+│                                            ↓                                                    │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────────────────────┐ │
+│  │ Step 10: RETURN RESPONSE                                                                │ │
+│  ├──────────────────────────────────────────────────────────────────────────────────────────┤ │
+│  │                                                                                          │ │
+│  │  return $response;                                                                       │ │
+│  │                                                                                          │ │
+│  │  → Back to Kernel::handle()                                                             │ │
+│  │  → Back to index.php                                                                     │ │
+│  │                                                                                          │ │
+│  └──────────────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                            ↓
+                                            ↓
+                                            ↓
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 3: SEND RESPONSE                                                                          │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                 │
+│  $response->send()                                                                             │
+│                                                                                                 │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐   │
+│  │ 1. Send Headers                                                                         │   │
+│  │    ┌────────────────────────────────────────────────────────────────┐                   │   │
+│  │    │ http_response_code(200)                                        │                   │   │
+│  │    │ header('Content-Type: text/html; charset=UTF-8')               │                   │   │
+│  │    │ header('X-Frame-Options: DENY')                                │                   │   │
+│  │    │ header('X-Content-Type-Options: nosniff')                      │                   │   │
+│  │    │ ... (all headers)                                              │                   │   │
+│  │    └────────────────────────────────────────────────────────────────┘                   │   │
+│  │                                                                                         │   │
+│  │ 2. Send Content                                                                         │   │
+│  │    ┌────────────────────────────────────────────────────────────────┐                   │   │
+│  │    │ echo $content;                                                 │                   │   │
+│  │    │ <html>                                                         │                   │   │
+│  │    │   <head><title>Product 5</title></head>                        │                   │   │
+│  │    │   <body>                                                       │                   │   │
+│  │    │     <h1>Product 5</h1>                                         │                   │   │
+│  │    │     <p>Price: $29.99</p>                                       │                   │   │
+│  │    │   </body>                                                      │                   │   │
+│  │    │ </html>                                                        │                   │   │
+│  │    └────────────────────────────────────────────────────────────────┘                   │   │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                                 │
+│  Response is now on its way to the client!                                                     │
+│  Client receives headers and starts downloading content.                                       │
+│                                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                            ↓
+                                            ↓
+                                            ↓
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 4: TERMINATE (Post-Response Processing)                                                  │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                 │
+│  $kernel->terminate($request, $response)                                                       │
+│                                                                                                 │
+│  ┌────────────────────────────────────────────────────────────────────────────────────────┐   │
+│  │ kernel.terminate EVENT                                                                  │   │
+│  ├────────────────────────────────────────────────────────────────────────────────────────┤   │
+│  │                                                                                         │   │
+│  │  $event = new TerminateEvent($kernel, $request, $response)                             │   │
+│  │  $dispatcher->dispatch($event, KernelEvents::TERMINATE)                                │   │
+│  │                                                                                         │   │
+│  │  Important: Client already has the response!                                           │   │
+│  │  Client is NOT waiting for these listeners.                                            │   │
+│  │                                                                                         │   │
+│  │  This is perfect for heavy processing:                                                 │   │
+│  │                                                                                         │   │
+│  │  ┌────────────────────────────────────────────────────────────────┐                    │   │
+│  │  │ EmailQueueListener                                              │                    │   │
+│  │  │ - Process email queue                                           │                    │   │
+│  │  │ - Send all queued emails                                        │                    │   │
+│  │  │ - $mailer->flushQueue()                                         │                    │   │
+│  │  └────────────────────────────────────────────────────────────────┘                    │   │
+│  │                                                                                         │   │
+│  │  ┌────────────────────────────────────────────────────────────────┐                    │   │
+│  │  │ AnalyticsListener                                               │                    │   │
+│  │  │ - Send analytics data                                           │                    │   │
+│  │  │ - Track page view                                               │                    │   │
+│  │  │ - Update statistics                                             │                    │   │
+│  │  └────────────────────────────────────────────────────────────────┘                    │   │
+│  │                                                                                         │   │
+│  │  ┌────────────────────────────────────────────────────────────────┐                    │   │
+│  │  │ CacheWarmerListener                                             │                    │   │
+│  │  │ - Warm up caches                                                │                    │   │
+│  │  │ - Pre-generate cached content                                   │                    │   │
+│  │  │ - Optimize for next request                                     │                    │   │
+│  │  └────────────────────────────────────────────────────────────────┘                    │   │
+│  │                                                                                         │   │
+│  │  ┌────────────────────────────────────────────────────────────────┐                    │   │
+│  │  │ LoggerListener                                                  │                    │   │
+│  │  │ - Write detailed logs                                           │                    │   │
+│  │  │ - Flush log buffers                                             │                    │   │
+│  │  │ - Store metrics                                                 │                    │   │
+│  │  └────────────────────────────────────────────────────────────────┘                    │   │
+│  │                                                                                         │   │
+│  └────────────────────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                            ↓
+                                            ↓
+                                            ↓
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ DONE!                                                                                           │
+├─────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                 │
+│  Request fully processed.                                                                      │
+│  Client has received response.                                                                 │
+│  Post-processing complete.                                                                     │
+│  Ready for next request!                                                                       │
+│                                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+EXCEPTION HANDLING: What if something goes wrong?
+==================================================
+
+At ANY point during the workflow, if an exception is thrown:
+
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ try {                                                                             │
+│     // All the steps above...                                                    │
+│ } catch (\Throwable $e) {                                                        │
+│                                                                                  │
+│     // kernel.exception EVENT                                                    │
+│     $event = new ExceptionEvent($kernel, $request, MAIN_REQUEST, $e)            │
+│     $dispatcher->dispatch($event, KernelEvents::EXCEPTION)                       │
+│                                                                                  │
+│     Listeners can:                                                               │
+│     ┌────────────────────────────────────────────────────────────────┐          │
+│     │ ExceptionListener                                               │          │
+│     │                                                                │          │
+│     │ if ($e instanceof NotFoundHttpException) {                     │          │
+│     │     $response = new Response(                                  │          │
+│     │         $this->render404Page(),                                │          │
+│     │         404                                                    │          │
+│     │     );                                                         │          │
+│     │     $event->setResponse($response);                            │          │
+│     │ }                                                              │          │
+│     │                                                                │          │
+│     │ elseif ($e instanceof AccessDeniedException) {                 │          │
+│     │     $response = new Response(                                  │          │
+│     │         $this->render403Page(),                                │          │
+│     │         403                                                    │          │
+│     │     );                                                         │          │
+│     │     $event->setResponse($response);                            │          │
+│     │ }                                                              │          │
+│     │                                                                │          │
+│     │ else {                                                         │          │
+│     │     // Log the exception                                       │          │
+│     │     $this->logger->error($e->getMessage(), [                   │          │
+│     │         'exception' => $e                                      │          │
+│     │     ]);                                                        │          │
+│     │                                                                │          │
+│     │     // Send alert to developers                                │          │
+│     │     $this->alerter->sendAlert($e);                             │          │
+│     │                                                                │          │
+│     │     // Generic 500 page                                        │          │
+│     │     $response = new Response(                                  │          │
+│     │         $this->render500Page(),                                │          │
+│     │         500                                                    │          │
+│     │     );                                                         │          │
+│     │     $event->setResponse($response);                            │          │
+│     │ }                                                              │          │
+│     └────────────────────────────────────────────────────────────────┘          │
+│                                                                                  │
+│     if ($event->hasResponse()) {                                                │
+│         // Exception converted to Response                                       │
+│         return $this->filterResponse($event->getResponse(), ...);               │
+│     }                                                                            │
+│                                                                                  │
+│     // No listener handled it - re-throw                                        │
+│     throw $e;                                                                    │
+│ }                                                                                │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+
+TIMING: How long does each phase take?
+=======================================
+
+Phase 0: Bootstrap
+  - Autoload: <1ms
+  - Create kernel: <1ms
+  - Create request: <1ms
+  Total: ~1-3ms
+
+Phase 1: Kernel Boot (first request only)
+  - Create services: 1-5ms
+  - Register listeners: 1-2ms
+  Total: 2-7ms
+
+Phase 2: Request Handling
+  - kernel.request (routing, etc.): 1-2ms
+  - Resolve controller: <1ms
+  - kernel.controller: <1ms
+  - Resolve arguments: <1ms
+  - kernel.controller_arguments: <1ms
+  - Execute controller: ??? (YOUR CODE - varies widely!)
+    * Simple: 1-10ms
+    * With database: 10-100ms
+    * With external APIs: 100-1000ms+
+  - kernel.view: <1ms
+  - kernel.response: <1ms
+  - kernel.finish_request: <1ms
+  Framework overhead: ~5-10ms
+  Controller time: varies!
+
+Phase 3: Send Response
+  - Send headers: <1ms
+  - Send content: depends on size & compression
+  Total: 1-10ms
+
+Phase 4: Terminate
+  - kernel.terminate listeners: varies (but client doesn't wait!)
+
+TOTAL OVERHEAD: ~10-20ms (without controller)
+TOTAL TIME: overhead + controller time
+
+
+KEY INSIGHTS:
+=============
+
+1. The framework overhead is minimal (~10-20ms)
+2. Most time is spent in YOUR controller code
+3. Events provide extension points at every step
+4. Short-circuits skip unnecessary processing
+5. kernel.terminate allows heavy work after response sent
+6. Exception handling converts any error to a Response
+7. The entire architecture is event-driven
+8. Everything flows through a single, simple interface: HttpKernelInterface
+
+This is the beauty of Symfony's architecture!
